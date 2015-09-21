@@ -1,10 +1,9 @@
 {
-  "name": "flickr-search",
-  "description": "Search Flickr public images by tag",
-  "main": "app.js",
+  "title": "Input Elements",
+  "description": "Showcases various input elements like Text, Checkbox, Picker, ...",
+  "category": "Small Apps",
+  "main": "input.js",
   "dependencies": {
-    "tabris": "^1.2.0",
-    "promise": "^6.1.0",
-    "whatwg-fetch": "^0.9.0"
+    "tabris": "^1.2.0"
   }
 }
