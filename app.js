@@ -1,112 +1,162 @@
-Promise = require("promise");
-require("whatwg-fetch");
+var message;
 
 var page = tabris.create("Page", {
-    title: "Flickr Search",
-    topLevel: true
+  title: "Oceanic Flight 815 Booking",
+  topLevel: true
 });
 
-var tagInput = tabris.create("TextInput", {
-    layoutData: {
-        left: 8,
-        right: 8,
-        top: 8
-    },
-    message: "Search..."
-}).on("accept", loadItems).appendTo(page);
-
-var view = tabris.create("CollectionView", {
-    layoutData: {
-        left: 0,
-        top: [tagInput, 8],
-        right: 0,
-        bottom: 0
-    },
-    itemHeight: 200,
-    refreshEnabled: true,
-    initializeCell: function(cell) {
-        var imageView = tabris.create("ImageView", {
-            layoutData: {
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0
-            },
-            scaleMode: 'fill'
-        }).appendTo(cell);
-        var titleComposite = tabris.create("Composite", {
-            background: "rgba(0,0,0,0.8)",
-            top: 0,
-            right: 0,
-            left: 0
-        }).appendTo(cell);
-        var textView = tabris.create("TextView", {
-            layoutData: {
-                left: 30,
-                top: 5,
-                bottom: 5,
-                right: 30
-            },
-            alignment: "center",
-            font: "16px Roboto, sans-serif",
-            textColor: "#fff"
-        }).appendTo(titleComposite);
-        cell.on("change:item", function(widget, item) {
-            animateFadeInFromRight(widget, 500);
-            imageView.set("image", {
-                src: item.media.m
-            });
-            item.title ? textView.set("text", item.title) : textView.set("text", 'No Title');
-        });
-    }
-}).on("refresh", function() {
-    loadItems();
+tabris.create("TextView", {
+  id: "firstNameLabel",
+  alignment: "left",
+  text: "First Name:"
 }).appendTo(page);
 
-function loadItems() {
-    view.set({
-        refreshIndicator: true,
-        refreshMessage: "loading..."
-    });
-    fetch("https://api.flickr.com/services/feeds/photos_public.gne?format=json&jsoncallback=JSON_CALLBACK&tags=" + tagInput.get('text')).then(function(response) {
-        var dyn_function = new Function("JSON_CALLBACK", response._bodyInit);
-        dyn_function(function(json) {
-            if (json.items && json.items.length) {
-                view.set({
-                    items: json.items,
-                    refreshIndicator: false,
-                    refreshMessage: "refreshed"
-                });
-            } else {
-                navigator.notification.alert('Nothing found with tag: ' + tagInput.get('text'), null, 'Result');
-                view.set({
-                    refreshIndicator: false,
-                    refreshMessage: "refreshed"
-                });
-            }
-        })
-    }).catch(function(error) {
-        console.log('request failed:', error)
-    })
+tabris.create("TextInput", {
+  id: "firstNameInput",
+  message: "First Name"
+}).appendTo(page);
+
+tabris.create("TextView", {
+  id: "lastNameLabel",
+  text: "Last Name:"
+}).appendTo(page);
+
+tabris.create("TextInput", {
+  id: "lastNameInput",
+  message: "Last Name"
+}).appendTo(page);
+
+tabris.create("TextView", {
+  id: "passphraseLabel",
+  text: "Passphrase:"
+}).appendTo(page);
+
+tabris.create("TextInput", {
+  id: "passphraseInput",
+  type: "password",
+  message: "Passphrase"
+}).appendTo(page);
+
+tabris.create("TextView", {
+  id: "countryLabel",
+  text: "Country:"
+}).appendTo(page);
+
+tabris.create("Picker", {
+  id: "countryPicker",
+  items: ["Germany", "Canada", "USA", "Bulgaria"]
+}).appendTo(page);
+
+tabris.create("TextView", {
+  id: "classLabel",
+  text: "Class:"
+}).appendTo(page);
+
+tabris.create("Picker", {
+  id: "classPicker",
+  items: ["Business", "Economy", "Economy Plus"]
+}).appendTo(page);
+
+tabris.create("TextView", {
+  id: "seatLabel",
+  text: "Seat:"
+}).appendTo(page);
+
+tabris.create("RadioButton", {
+  id: "window",
+  text: "Window"
+}).appendTo(page);
+
+tabris.create("RadioButton", {
+  id: "aisle",
+  text: "Aisle"
+}).appendTo(page);
+
+tabris.create("RadioButton", {
+  id: "dontCareButton",
+  text: "Don't care",
+  selection: true
+}).appendTo(page);
+
+tabris.create("Composite", {
+  id: "luggagePanel"
+}).append(
+  tabris.create("TextView", {
+    id: "luggageLabel",
+    text: "Luggage:"
+  })
+).append(
+  tabris.create("TextView", {
+    id: "luggageWeight",
+    text: "0 Kg"
+  })
+).append(
+  tabris.create("Slider", {
+    id: "luggageSlider"
+  }).on("change:selection", function(widget, selection) {
+    page.find("#luggageWeight").set("text", selection + " Kg");
+  })
+).appendTo(page);
+
+tabris.create("CheckBox", {
+  id: "veggie",
+  text: "Vegetarian"
+}).appendTo(page);
+
+tabris.create("Button", {
+  id: "done",
+  text: "Place Reservation",
+  background: "#8b0000",
+  textColor: "white"
+}).on("select", function() {
+  populateMessage();
+}).appendTo(page);
+
+page.apply({
+  "#firstNameLabel": {layoutData: {left: 10, top: 18, width: 120}},
+  "#firstNameInput": {layoutData: {left: "#firstNameLabel 10", right: 10, baseline: "#firstNameLabel"}},
+  "#lastNameLabel": {layoutData: {left: 10, top: "#firstNameLabel 18", width: 120}},
+  "#lastNameInput": {layoutData: {left: "#lastNameLabel 10", right: 10, baseline: "#lastNameLabel"}},
+  "#passphraseLabel": {layoutData: {left: 10, top: "#lastNameLabel 18", width: 120}},
+  "#passphraseInput": {layoutData: {left: "#passphraseLabel 10", right: 10, baseline: "#passphraseLabel"}},
+  "#countryLabel": {layoutData: {left: 10, top: "#passphraseLabel 18", width: 120}},
+  "#countryPicker": {layoutData: {left: "#countryLabel 10", right: 10, baseline: "#countryLabel"}},
+  "#seatLabel": {layoutData: {left: 10, top: "#classLabel 18", width: 120}},
+  "#window": {layoutData: {left: "#seatLabel 10", right: 10, baseline: "#seatLabel"}},
+  "#aisle": {layoutData: {left: "#seatLabel 10", right: 10, top: "#seatLabel 10"}},
+  "#classLabel": {layoutData: {left: 10, top: "#countryLabel 18", width: 120}},
+  "#classPicker": {layoutData: {left: "#classLabel 10", right: 10, baseline: "#classLabel"}},
+  "#dontCareButton": {layoutData: {left: "#seatLabel 10", right: 10, top: "#aisle 10"}},
+  "#luggagePanel": {layoutData: {left: 10, top: "#dontCareButton 18", right: 10}},
+  "#luggageLabel": {layoutData: {left: 0, centerY: 0, width: 120}},
+  "#luggageWeight": {layoutData: {right: 10, centerY: 0, width: 50}},
+  "#luggageSlider": {layoutData: {left: "#luggageLabel 10", right: "#luggageWeight 10", centerY: 0}},
+  "#veggie": {layoutData: {left: "#seatLabel 10", right: 10, top: "#luggagePanel 10"}},
+  "#done": {layoutData: {left: 10, right: 10, top: "#veggie 18"}}
+});
+
+function populateMessage() {
+  if (message) {
+    message.dispose();
+  }
+  message = tabris.create("TextView", {
+    layoutData: {left: 10, right: 10, top: "#done 10"},
+    text: "Flight booked for: " + createName() + "\nSeating: " + createSeating()
+  }).appendTo(page);
 }
 
-function animateFadeInFromRight(widget, delay) {
-    widget.set({
-        opacity: 0.0,
-        transform: {
-            translationX: 150
-        }
-    });
-    widget.animate({
-        opacity: 1.0,
-        transform: {
-            translationX: 0
-        }
-    }, {
-        duration: 500,
-        delay: delay,
-        easing: "ease-out"
-    });
+function createName() {
+  return [page.children("#firstNameInput").get("text"), page.children("#lastNameInput").get("text")].join(" ");
 }
-loadItems();
+
+function createSeating() {
+  var seating = "Anywhere";
+  page.children("RadioButton").forEach(function(button) {
+    if (button.get("selection")) {
+      seating = button.get("text");
+    }
+  });
+  return seating;
+}
+
 page.open();
